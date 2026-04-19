@@ -1,6 +1,6 @@
-import type { MetaPayload, OptionItem } from "@/types/tablecrm";
+import type { MetaPayload, MetaOption } from "@/types/tablecrm";
 
-function toSelectOptions(items: OptionItem[]) {
+function toSelectOptions(items: MetaOption[]) {
   return items.map((item) => ({ value: String(item.id), label: item.name }));
 }
 

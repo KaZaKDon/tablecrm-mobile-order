@@ -1,3 +1,4 @@
+import { getLineTotal } from "@/lib/mappers/product";
 import type { OrderFormState } from "@/types/tablecrm";
 
 export type SubmitMode = "draft" | "post";
@@ -6,58 +7,42 @@ function toUnixSeconds(date = Date.now()) {
   return Math.floor(date / 1000);
 }
 
-export function buildSalePayload(state: OrderFormState, mode: SubmitMode) {
-  const total = state.items.reduce((sum, item) => {
-    const rowSum =
-      item.sumDiscounted != null
-        ? Number(item.sumDiscounted)
-        : Number(item.price) * Number(item.quantity);
+function toPaidRubles(value: number) {
+  return Number.isInteger(value) ? value : value.toFixed(2);
+}
 
-    return sum + rowSum;
+export function buildSalePayload(state: OrderFormState, _mode: SubmitMode) {
+  const total = state.items.reduce((sum, item) => {
+    return sum + getLineTotal(Number(item.price), Number(item.quantity), Number(item.discount ?? 0));
   }, 0);
 
-  return [
-    {
-      priority: 0,
-      dated: toUnixSeconds(),
-      operation: "Заказ",
-      tax_included: true,
-      tax_active: true,
+  const root: Record<string, unknown> = {
+    priority: 0,
+    dated: toUnixSeconds(),
+    operation: "Заказ",
+    tax_included: true,
+    tax_active: true,
+    goods: state.items.map((item) => ({
+      price: Number(item.price),
+      quantity: Number(item.quantity),
+      unit: Number(item.unitId ?? 116),
+      discount: Number(item.discount ?? 0),
+      sum_discounted: Number(item.sumDiscounted ?? item.discount ?? 0),
+      nomenclature: Number(item.id),
+    })),
+    settings: state.repeatability ?? {},
+    warehouse: Number(state.warehouseId),
+    contragent: state.client?.id ? Number(state.client.id) : null,
+    paybox: Number(state.payboxId),
+    organization: Number(state.organizationId),
+    status: false,
+    paid_rubles: toPaidRubles(Number(total.toFixed(2))),
+    paid_lt: 0,
+  };
 
-      goods: state.items.map((item) => ({
-        price_type: item.priceTypeId ?? state.priceTypeId ?? null,
-        price: Number(item.price),
-        quantity: Number(item.quantity),
-        unit: Number(item.unitId ?? 116),
-        discount: Number(item.discount ?? 0),
-        sum_discounted:
-          item.sumDiscounted != null
-            ? Number(item.sumDiscounted)
-            : Number(item.price) * Number(item.quantity),
-        nomenclature: Number(item.id),
+  if (state.client?.loyalityCardId) {
+    root.loyality_card_id = Number(state.client.loyalityCardId);
+  }
 
-        // Эти поля можно оставить — они помогают совпасть с реальной моделью строки
-        unit_name: item.unitName ?? "шт",
-        tax: Number(item.tax ?? 0),
-        status: item.status ?? "новый",
-        nomenclature_name: item.name,
-      })),
-
-      settings: state.repeatability ?? {},
-
-      ...(state.client?.loyalityCardId
-        ? { loyality_card_id: Number(state.client.loyalityCardId) }
-        : {}),
-
-      warehouse: Number(state.warehouseId),
-      contragent: state.client?.id ? Number(state.client.id) : null,
-      paybox: Number(state.payboxId),
-      organization: Number(state.organizationId),
-
-      status: mode === "post",
-      paid_rubles: total.toFixed(2),
-      paid_lt: 0,
-      comment: state.comment?.trim() || null,
-    },
-  ];
+  return [root];
 }
