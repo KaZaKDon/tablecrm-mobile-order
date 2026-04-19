@@ -1,6 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  CheckCircle2,
+  Loader2,
+  PackageSearch,
+  Search,
+  ShoppingCart,
+  Store,
+  WalletCards,
+  X,
+} from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -9,8 +20,12 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { mapProduct } from "@/lib/mappers/product";
 import { formatMoney, maskPhone } from "@/lib/utils";
-import type { ClientOption, MetaPayload, OrderFormState, ProductItem } from "@/types/tablecrm";
-import { CheckCircle2, Loader2, PackageSearch, Search, ShoppingCart, WalletCards, X } from "lucide-react";
+import type {
+  ClientOption,
+  MetaPayload,
+  OrderFormState,
+  ProductItem,
+} from "@/types/tablecrm";
 
 type ProductSearchItem = {
   id?: string | number;
@@ -93,6 +108,28 @@ function extractSaleMeta(payload: unknown, fallbackTotal: number) {
   };
 }
 
+function SectionHeader({
+  icon,
+  title,
+  description,
+}: {
+  icon: ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="mb-4 flex items-start gap-3">
+      <div className="rounded-md border bg-muted/40 p-2 text-muted-foreground">
+        {icon}
+      </div>
+      <div className="space-y-1">
+        <CardTitle className="text-base font-semibold">{title}</CardTitle>
+        <CardDescription className="text-sm">{description}</CardDescription>
+      </div>
+    </div>
+  );
+}
+
 export function OrderApp() {
   const [state, setState] = useState<OrderFormState>(initialState);
   const [meta, setMeta] = useState<MetaPayload | null>(null);
@@ -168,7 +205,9 @@ export function OrderApp() {
       setProducts(data.items ?? []);
 
       if (!options?.silent) {
-        setMessage(data.items?.length ? `Товаров загружено: ${data.items.length}` : "Товары не найдены");
+        setMessage(
+          data.items?.length ? `Товаров загружено: ${data.items.length}` : "Товары не найдены",
+        );
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка поиска товаров");
@@ -211,16 +250,22 @@ export function OrderApp() {
             .map(([key]) => key)
         : [];
 
-      if (failed.length) {
-        setMessage(`Справочники загружены частично. Проблемы: ${failed.join(", ")}`);
-      } else {
-        setMessage("Справочники успешно загружены.");
-      }
+      setMessage(
+        failed.length
+          ? `Справочники загружены частично. Проблемы: ${failed.join(", ")}`
+          : "Справочники успешно загружены.",
+      );
 
-      const firstOrganizationId = data.organizations?.[0]?.id ? Number(data.organizations[0].id) : null;
+      const firstOrganizationId = data.organizations?.[0]?.id
+        ? Number(data.organizations[0].id)
+        : null;
       const firstPayboxId = data.payboxes?.[0]?.id ? Number(data.payboxes[0].id) : null;
-      const firstWarehouseId = data.warehouses?.[0]?.id ? Number(data.warehouses[0].id) : null;
-      const firstPriceTypeId = data.priceTypes?.[0]?.id ? Number(data.priceTypes[0].id) : null;
+      const firstWarehouseId = data.warehouses?.[0]?.id
+        ? Number(data.warehouses[0].id)
+        : null;
+      const firstPriceTypeId = data.priceTypes?.[0]?.id
+        ? Number(data.priceTypes[0].id)
+        : null;
 
       setState((prev) => ({
         ...prev,
@@ -264,7 +309,11 @@ export function OrderApp() {
         client: data.first ? mapClient(data.first) : null,
       }));
 
-      setMessage(data.first ? "Клиент найден." : "Клиент не найден. Можно создать продажу без карты лояльности.");
+      setMessage(
+        data.first
+          ? "Клиент найден."
+          : "Клиент не найден. Можно создать продажу без карты лояльности.",
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка поиска клиента");
     } finally {
@@ -434,22 +483,28 @@ export function OrderApp() {
   return (
     <>
       {saleInfo ? (
-        <div className="pointer-events-none fixed inset-x-0 top-3 z-[9999] px-4">
-          <div className="pointer-events-auto mx-auto w-full max-w-md rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800 shadow-lg">
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
+        <div className="pointer-events-none fixed inset-x-0 top-4 z-[9999] px-4">
+          <div className="pointer-events-auto mx-auto w-full max-w-3xl rounded-lg border bg-background shadow-lg">
+            <div className="flex items-start gap-3 p-4">
+              <div className="rounded-full bg-emerald-500/10 p-2 text-emerald-600">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+
               <div className="min-w-0 flex-1">
-                <div className="text-base font-semibold">
-                  {saleInfo.mode === "post" ? "Продажа создана и проведена" : "Продажа создана"}
+                <div className="text-sm font-semibold">
+                  {saleInfo.mode === "post"
+                    ? "Продажа создана и проведена"
+                    : "Продажа создана"}
                 </div>
-                <div className="mt-1 text-sm">
+                <div className="mt-1 text-sm text-muted-foreground">
                   ID: {saleInfo.id ?? "—"}, сумма: {formatMoney(saleInfo.total)}
                 </div>
               </div>
+
               <button
                 type="button"
                 onClick={() => setSaleInfo(null)}
-                className="rounded-md p-1 text-emerald-700 transition hover:bg-emerald-100"
+                className="rounded-md p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
                 aria-label="Закрыть уведомление"
               >
                 <X className="h-4 w-4" />
@@ -459,384 +514,453 @@ export function OrderApp() {
         </div>
       ) : null}
 
-      <main className="mx-auto min-h-screen w-full max-w-md px-4 py-6 pb-40">
-        <div className="mb-6 flex items-start justify-between gap-3">
-          <div>
-            <p className="text-sm font-medium text-primary">tablecrm.com</p>
-            <h1 className="text-2xl font-bold tracking-tight">Мобильный заказ</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              WebApp для создания продажи и проведения в один клик.
-            </p>
-          </div>
-          <Badge>{meta ? "Касса подключена" : "Касса не подключена"}</Badge>
-        </div>
-
-        <div className="space-y-4">
-          <Card>
-            <div className="mb-3 flex items-center gap-3">
-              <div className="rounded-2xl bg-blue-50 p-2 text-primary">
-                <WalletCards className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle>1. Подключение кассы</CardTitle>
-                <CardDescription>Введите токен и загрузите справочники</CardDescription>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <Input
-                placeholder="Token"
-                value={state.token}
-                onChange={(e) =>
-                  setState((prev) => ({
-                    ...prev,
-                    token: e.target.value,
-                  }))
-                }
-              />
-              <Button className="w-full" onClick={connectToken} disabled={connecting || !state.token.trim()}>
-                {connecting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Подключить
-              </Button>
-            </div>
-          </Card>
-
-          <Card>
-            <div className="mb-3 flex items-center gap-3">
-              <div className="rounded-2xl bg-blue-50 p-2 text-primary">
-                <Search className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle>2. Клиент</CardTitle>
-                <CardDescription>Поиск клиента по телефону</CardDescription>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <Input
-                placeholder="Телефон"
-                value={state.phone}
-                onChange={(e) =>
-                  setState((prev) => ({
-                    ...prev,
-                    phone: maskPhone(e.target.value),
-                  }))
-                }
-              />
-
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={searchClient}
-                disabled={searchingClient || !state.token.trim()}
-              >
-                {searchingClient ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Найти клиента
-              </Button>
-
-              <div className="rounded-2xl border bg-slate-50 p-3 text-sm">
-                <div className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">
-                  Найденный клиент
+      <main className="min-h-screen bg-muted/30">
+        <div className="mx-auto w-full max-w-3xl px-4 pb-40 pt-4 md:px-6">
+          <div className="sticky top-0 z-30 mb-6 border-b bg-muted/30 backdrop-blur supports-[backdrop-filter]:bg-muted/20">
+            <div className="flex flex-col gap-4 py-4 md:flex-row md:items-start md:justify-between">
+              <div className="space-y-1">
+                <div className="text-xs font-medium uppercase tracking-[0.24em] text-muted-foreground">
+                  tablecrm.com
                 </div>
-                <div className="font-medium">{state.client?.name ?? "Клиент не выбран"}</div>
-                {state.client?.phone ? <div className="text-muted-foreground">{state.client.phone}</div> : null}
-                {state.client?.loyalityCardId ? (
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    Карта лояльности: {state.client.loyalityCardId}
-                  </div>
-                ) : null}
+                <h1 className="text-2xl font-semibold tracking-tight">Мобильный заказ</h1>
+                <p className="text-sm text-muted-foreground">
+                  Создание продажи и проведение в один клик.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Badge
+                  className={
+                    meta
+                      ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                      : "border border-border bg-muted text-foreground"
+                  }
+                >
+                  {meta ? "Касса подключена" : "Касса не подключена"}
+                </Badge>
+
+                <Badge className="border border-border bg-background text-foreground">
+                  {state.items.length} поз.
+                </Badge>
               </div>
             </div>
-          </Card>
+          </div>
 
-          <Card>
-            <div className="mb-3 flex items-center gap-3">
-              <div className="rounded-2xl bg-blue-50 p-2 text-primary">
-                <WalletCards className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle>3. Параметры продажи</CardTitle>
-                <CardDescription>Счёт, организация, склад и тип цены</CardDescription>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3">
-              <Select
-                value={state.organizationId ? String(state.organizationId) : ""}
-                onChange={(value) =>
-                  setState((prev) => ({
-                    ...prev,
-                    organizationId: value ? Number(value) : null,
-                  }))
-                }
-                options={organizationOptions}
-                placeholder="Выберите организацию"
-              />
-
-              <Select
-                value={state.payboxId ? String(state.payboxId) : ""}
-                onChange={(value) =>
-                  setState((prev) => ({
-                    ...prev,
-                    payboxId: value ? Number(value) : null,
-                  }))
-                }
-                options={payboxOptions}
-                placeholder="Выберите счёт"
-              />
-
-              <Select
-                value={state.warehouseId ? String(state.warehouseId) : ""}
-                onChange={(value) =>
-                  setState((prev) => ({
-                    ...prev,
-                    warehouseId: value ? Number(value) : null,
-                  }))
-                }
-                options={warehouseOptions}
-                placeholder="Выберите склад"
-              />
-
-              <Select
-                value={state.priceTypeId ? String(state.priceTypeId) : ""}
-                onChange={(value) =>
-                  setState((prev) => ({
-                    ...prev,
-                    priceTypeId: value ? Number(value) : null,
-                  }))
-                }
-                options={priceTypeOptions}
-                placeholder="Выберите тип цены"
-              />
-            </div>
-          </Card>
-
-          <Card>
-            <div className="mb-3 flex items-center gap-3">
-              <div className="rounded-2xl bg-blue-50 p-2 text-primary">
-                <PackageSearch className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle>4. Товары</CardTitle>
-                <CardDescription>
-                  После подключения кассы товары загружаются. Поиск и фильтрация работают по названию и артикулу.
-                </CardDescription>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Название или артикул"
-                  value={productQuery}
-                  onChange={(e) => setProductQuery(e.target.value)}
+          <div className="grid grid-cols-1 gap-4">
+            <Card className="rounded-lg border shadow-sm">
+              <div className="p-5">
+                <SectionHeader
+                  icon={<Store className="h-4 w-4" />}
+                  title="Подключение кассы"
+                  description="Введите токен и загрузите справочники."
                 />
-                <Button variant="outline" onClick={searchProducts} disabled={searchingProducts || !state.token.trim()}>
-                  {searchingProducts ? <Loader2 className="h-4 w-4 animate-spin" /> : "Найти"}
-                </Button>
-              </div>
 
-              <div className="space-y-2">
-                {filteredProducts.length ? (
-                  filteredProducts.map((product) => (
-                    <div
-                      key={String(product.id ?? product.nomenclature ?? product.nomenclature_id)}
-                      className="rounded-2xl border bg-white p-3"
+                <div className="grid gap-3">
+                  <Input
+                    placeholder="Token"
+                    value={state.token}
+                    onChange={(e) =>
+                      setState((prev) => ({
+                        ...prev,
+                        token: e.target.value,
+                      }))
+                    }
+                  />
+
+                  <Button
+                    onClick={connectToken}
+                    disabled={connecting || !state.token.trim()}
+                    className="w-full md:w-auto"
+                  >
+                    {connecting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Подключить
+                  </Button>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="rounded-lg border shadow-sm">
+              <div className="p-5">
+                <SectionHeader
+                  icon={<Search className="h-4 w-4" />}
+                  title="Клиент"
+                  description="Поиск клиента по телефону."
+                />
+
+                <div className="grid gap-3">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Телефон"
+                      value={state.phone}
+                      onChange={(e) =>
+                        setState((prev) => ({
+                          ...prev,
+                          phone: maskPhone(e.target.value),
+                        }))
+                      }
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={searchClient}
+                      disabled={searchingClient || !state.token.trim()}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="font-medium">
-                            {product.name ?? product.nomenclature_name ?? "Без названия"}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {[
-                              product.article ?? product.code,
-                              product.unit_name ? `Ед.: ${product.unit_name}` : null,
-                              product.unit ? `Unit ID: ${product.unit}` : null,
-                              product.price_type ? `Тип цены: ${product.price_type}` : null,
-                            ]
-                              .filter(Boolean)
-                              .join(" · ") || "Без доп. данных"}
+                      {searchingClient ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Search className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+
+                  <div className="rounded-lg border bg-background p-3">
+                    <div className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Найденный клиент
+                    </div>
+                    <div className="text-sm font-medium">
+                      {state.client?.name ?? "Клиент не выбран"}
+                    </div>
+                    {state.client?.phone ? (
+                      <div className="mt-1 text-sm text-muted-foreground">
+                        {state.client.phone}
+                      </div>
+                    ) : null}
+                    {state.client?.loyalityCardId ? (
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        Карта лояльности: {state.client.loyalityCardId}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="rounded-lg border shadow-sm">
+              <div className="p-5">
+                <SectionHeader
+                  icon={<WalletCards className="h-4 w-4" />}
+                  title="Параметры продажи"
+                  description="Счёт, организация, склад и тип цены."
+                />
+
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <Select
+                    value={state.organizationId ? String(state.organizationId) : ""}
+                    onChange={(value) =>
+                      setState((prev) => ({
+                        ...prev,
+                        organizationId: value ? Number(value) : null,
+                      }))
+                    }
+                    options={organizationOptions}
+                    placeholder="Выберите организацию"
+                  />
+
+                  <Select
+                    value={state.payboxId ? String(state.payboxId) : ""}
+                    onChange={(value) =>
+                      setState((prev) => ({
+                        ...prev,
+                        payboxId: value ? Number(value) : null,
+                      }))
+                    }
+                    options={payboxOptions}
+                    placeholder="Выберите счёт"
+                  />
+
+                  <Select
+                    value={state.warehouseId ? String(state.warehouseId) : ""}
+                    onChange={(value) =>
+                      setState((prev) => ({
+                        ...prev,
+                        warehouseId: value ? Number(value) : null,
+                      }))
+                    }
+                    options={warehouseOptions}
+                    placeholder="Выберите склад"
+                  />
+
+                  <Select
+                    value={state.priceTypeId ? String(state.priceTypeId) : ""}
+                    onChange={(value) =>
+                      setState((prev) => ({
+                        ...prev,
+                        priceTypeId: value ? Number(value) : null,
+                      }))
+                    }
+                    options={priceTypeOptions}
+                    placeholder="Выберите тип цены"
+                  />
+                </div>
+              </div>
+            </Card>
+
+            <Card className="rounded-lg border shadow-sm">
+              <div className="p-5">
+                <SectionHeader
+                  icon={<PackageSearch className="h-4 w-4" />}
+                  title="Товары"
+                  description="Поиск и добавление номенклатуры по названию и артикулу."
+                />
+
+                <div className="grid gap-4">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Название или артикул"
+                      value={productQuery}
+                      onChange={(e) => setProductQuery(e.target.value)}
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={searchProducts}
+                      disabled={searchingProducts || !state.token.trim()}
+                    >
+                      {searchingProducts ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Найти"
+                      )}
+                    </Button>
+                  </div>
+
+                  <div className="grid gap-2">
+                    {filteredProducts.length ? (
+                      filteredProducts.map((product) => (
+                        <div
+                          key={String(
+                            product.id ?? product.nomenclature ?? product.nomenclature_id,
+                          )}
+                          className="rounded-lg border bg-background p-4 transition-colors hover:bg-muted/30"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-sm font-medium">
+                                {product.name ?? product.nomenclature_name ?? "Без названия"}
+                              </div>
+                              <div className="mt-1 text-xs text-muted-foreground">
+                                {[
+                                  product.article ?? product.code,
+                                  product.unit_name ? `Ед.: ${product.unit_name}` : null,
+                                  product.unit ? `Unit ID: ${product.unit}` : null,
+                                  product.price_type ? `Тип цены: ${product.price_type}` : null,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ") || "Без доп. данных"}
+                              </div>
+                            </div>
+
+                            <div className="flex shrink-0 flex-col items-end gap-2">
+                              <div className="text-sm font-semibold">
+                                {formatMoney(Number(product.price ?? 0))}
+                              </div>
+                              <Button
+                                onClick={() => addProduct(product)}
+                                className="h-8 px-3 text-xs"
+                              >
+                                Добавить
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="font-semibold">{formatMoney(Number(product.price ?? 0))}</div>
-                          <Button className="mt-2 h-9 px-3" onClick={() => addProduct(product)}>
-                            Добавить
+                      ))
+                    ) : (
+                      <div className="rounded-lg border border-dashed bg-background p-6 text-sm text-muted-foreground">
+                        Товары не найдены
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="rounded-lg border shadow-sm">
+              <div className="p-5">
+                <SectionHeader
+                  icon={<ShoppingCart className="h-4 w-4" />}
+                  title="Корзина"
+                  description="Редактирование количества, цены, скидки и суммы по позициям."
+                />
+
+                <div className="grid gap-3">
+                  {state.items.length ? (
+                    state.items.map((item) => (
+                      <div key={item.id} className="rounded-lg border bg-background p-4">
+                        <div className="mb-4 flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-medium">{item.name}</div>
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              {[
+                                item.article ? `Арт.: ${item.article}` : null,
+                                item.unitName
+                                  ? `Ед.: ${item.unitName}`
+                                  : item.unitId
+                                    ? `Ед. ID: ${item.unitId}`
+                                    : null,
+                                item.priceTypeId ? `Тип цены: ${item.priceTypeId}` : null,
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </div>
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            className="h-8 px-3 text-xs text-destructive"
+                            onClick={() => removeItem(item.id)}
+                          >
+                            Удалить
                           </Button>
                         </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="rounded-2xl border border-dashed bg-slate-50 p-4 text-sm text-muted-foreground">
-                    Товары не найдены
-                  </div>
-                )}
-              </div>
-            </div>
-          </Card>
 
-          <Card>
-            <div className="mb-3 flex items-center gap-3">
-              <div className="rounded-2xl bg-blue-50 p-2 text-primary">
-                <ShoppingCart className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle>Корзина</CardTitle>
-                <CardDescription>Количество, цена, скидка и сумма по позициям</CardDescription>
-              </div>
-            </div>
+                        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                          <div className="space-y-1">
+                            <div className="text-xs text-muted-foreground">Количество</div>
+                            <Input
+                              type="number"
+                              step="1"
+                              min="1"
+                              value={String(item.quantity)}
+                              onChange={(e) =>
+                                updateItem(item.id, {
+                                  quantity: Number(e.target.value),
+                                })
+                              }
+                            />
+                          </div>
 
-            <div className="space-y-3">
-              {state.items.length ? (
-                state.items.map((item) => (
-                  <div key={item.id} className="rounded-2xl border bg-white p-3">
-                    <div className="mb-3 flex items-start justify-between gap-3">
-                      <div>
-                        <div className="font-medium">{item.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {[
-                            item.article ? `Арт.: ${item.article}` : null,
-                            item.unitName ? `Ед.: ${item.unitName}` : item.unitId ? `Ед. ID: ${item.unitId}` : null,
-                            item.priceTypeId ? `Тип цены: ${item.priceTypeId}` : null,
-                          ]
-                            .filter(Boolean)
-                            .join(" · ")}
+                          <div className="space-y-1">
+                            <div className="text-xs text-muted-foreground">Цена</div>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={String(item.price)}
+                              onChange={(e) =>
+                                updateItem(item.id, {
+                                  price: Number(e.target.value),
+                                })
+                              }
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="text-xs text-muted-foreground">Скидка</div>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={String(item.discount ?? 0)}
+                              onChange={(e) =>
+                                updateItem(item.id, {
+                                  discount: Number(e.target.value),
+                                })
+                              }
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="text-xs text-muted-foreground">Сумма</div>
+                            <Input
+                              value={String(getRowSum(item).toFixed(2))}
+                              readOnly
+                              className="bg-muted/40"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mt-3 rounded-md bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                          {Number(item.price ?? 0) === 0 ? (
+                            <span>
+                              Цена по выбранному типу цены не найдена. Можно ввести вручную.
+                            </span>
+                          ) : (
+                            <span>
+                              {item.quantity} × {formatMoney(item.price)}
+                              {Number(item.discount ?? 0) > 0
+                                ? ` − скидка ${formatMoney(Number(item.discount ?? 0))}`
+                                : ""}
+                            </span>
+                          )}
                         </div>
                       </div>
-
-                      <button
-                        type="button"
-                        className="text-sm font-medium text-red-600"
-                        onClick={() => removeItem(item.id)}
-                      >
-                        Удалить
-                      </button>
+                    ))
+                  ) : (
+                    <div className="rounded-lg border border-dashed bg-background p-6 text-sm text-muted-foreground">
+                      Добавьте хотя бы один товар
                     </div>
-
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      <div className="space-y-1">
-                        <div className="text-xs text-muted-foreground">Количество</div>
-                        <Input
-                          type="number"
-                          step="1"
-                          min="1"
-                          value={String(item.quantity)}
-                          onChange={(e) =>
-                            updateItem(item.id, {
-                              quantity: Number(e.target.value),
-                            })
-                          }
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <div className="text-xs text-muted-foreground">Цена</div>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={String(item.price)}
-                          onChange={(e) =>
-                            updateItem(item.id, {
-                              price: Number(e.target.value),
-                            })
-                          }
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <div className="text-xs text-muted-foreground">Скидка</div>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={String(item.discount ?? 0)}
-                          onChange={(e) =>
-                            updateItem(item.id, {
-                              discount: Number(e.target.value),
-                            })
-                          }
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <div className="text-xs text-muted-foreground">Сумма</div>
-                        <Input
-                          value={String(getRowSum(item).toFixed(2))}
-                          readOnly
-                          className="bg-slate-50"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-xs text-muted-foreground">
-                      {item.price === 0 ? (
-                        <span>Цена по выбранному типу цены не найдена. Можно ввести вручную.</span>
-                      ) : (
-                        <span>
-                          {item.quantity} × {formatMoney(item.price)}
-                          {Number(item.discount ?? 0) > 0 ? ` − скидка ${formatMoney(Number(item.discount ?? 0))}` : ""}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-2xl border border-dashed bg-slate-50 p-4 text-sm text-muted-foreground">
-                  Добавьте хотя бы один товар
+                  )}
                 </div>
-              )}
-            </div>
-          </Card>
+              </div>
+            </Card>
 
-          <Card>
-            <CardTitle className="mb-2">Комментарий</CardTitle>
-            <Textarea
-              placeholder="Комментарий к продаже"
-              value={state.comment}
-              onChange={(e) =>
-                setState((prev) => ({
-                  ...prev,
-                  comment: e.target.value,
-                }))
-              }
-            />
-          </Card>
+            <Card className="rounded-lg border shadow-sm">
+              <div className="p-5">
+                <SectionHeader
+                  icon={<WalletCards className="h-4 w-4" />}
+                  title="Комментарий"
+                  description="Дополнительный комментарий к продаже."
+                />
 
-          {(message || error) && (
-            <div
-              className={`rounded-2xl border p-3 text-sm ${
-                error
-                  ? "border-red-200 bg-red-50 text-red-700"
-                  : "border-emerald-200 bg-emerald-50 text-emerald-700"
-              }`}
-            >
-              {error || message}
-            </div>
-          )}
+                <Textarea
+                  placeholder="Комментарий к продаже"
+                  value={state.comment}
+                  onChange={(e) =>
+                    setState((prev) => ({
+                      ...prev,
+                      comment: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </Card>
+
+            {(message || error) && (
+              <div
+                className={`rounded-lg border px-4 py-3 text-sm ${
+                  error
+                    ? "border-destructive/30 bg-destructive/5 text-destructive"
+                    : "border-border bg-background text-foreground"
+                }`}
+              >
+                {error || message}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-md border-t bg-white/95 px-4 py-4 backdrop-blur">
-          <div className="mb-3 flex items-center justify-between">
-            <div>
-              <div className="text-sm text-muted-foreground">Итого</div>
-              <div className="text-2xl font-bold">{formatMoney(total)}</div>
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-4 py-4 md:px-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Итого
+                </div>
+                <div className="text-2xl font-semibold">{formatMoney(total)}</div>
+              </div>
+              <Badge className="border border-border bg-background text-foreground">
+                {state.items.length} поз.
+              </Badge>
             </div>
-            <Badge>{state.items.length} поз.</Badge>
-          </div>
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Button variant="outline" onClick={() => submit("draft")} disabled={!!submitting}>
-              {submitting === "draft" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Создать продажу
-            </Button>
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+              <Button
+                variant="outline"
+                onClick={() => submit("draft")}
+                disabled={!!submitting}
+              >
+                {submitting === "draft" ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Создать продажу
+              </Button>
 
-            <Button onClick={() => submit("post")} disabled={!!submitting}>
-              {submitting === "post" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Создать и провести
-            </Button>
+              <Button onClick={() => submit("post")} disabled={!!submitting}>
+                {submitting === "post" ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Создать и провести
+              </Button>
+            </div>
           </div>
         </div>
       </main>
